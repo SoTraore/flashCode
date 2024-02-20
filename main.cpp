@@ -11,28 +11,25 @@
 #define CHANNEL_RGB 3
 #define CHANNEL_CMYK 4
 
-
 void ditheringAlgo(uint8_t* in, int width, int height, int* thresholds, uint8_t* out) {
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            // Index pour accéder aux données CMYK de chaque pixel
-            int idx = (y * width + x) * CHANNEL_CMYK;
+            int idx = (y * width + x) * CHANNEL_CMYK; // Index pour accéder aux données CMYK
 
-            // Extraction des valeurs CMYK du pixel
+            // Initialisation des composantes CMYK
             uint8_t c = in[idx];
             uint8_t m = in[idx + 1];
             uint8_t y = in[idx + 2];
             uint8_t k = in[idx + 3];
 
-            // Compression des valeurs CMYK dans un seul octet utilisant les seuils
-            uint8_t compressedValue = 0;
-            compressedValue |= (c > thresholds[0]) ? 0b11000000 : (c > thresholds[1]) ? 0b10000000 : (c > thresholds[2]) ? 0b01000000 : 0;
-            compressedValue |= (m > thresholds[0]) ? 0b00110000 : (m > thresholds[1]) ? 0b00100000 : (m > thresholds[2]) ? 0b00010000 : 0;
-            compressedValue |= (y > thresholds[0]) ? 0b00001100 : (y > thresholds[1]) ? 0b00001000 : (y > thresholds[2]) ? 0b00000100 : 0;
-            compressedValue |= (k > thresholds[0]) ? 0b00000011 : (k > thresholds[1]) ? 0b00000010 : (k > thresholds[2]) ? 0b00000001 : 0;
+            // Application des seuils pour chaque composante
+            uint8_t compressedC = (c <= thresholds[0]) ? 0 : (c <= thresholds[1]) ? 1 : (c <= thresholds[2]) ? 2 : 3;
+            uint8_t compressedM = (m <= thresholds[0]) ? 0 : (m <= thresholds[1]) ? 1 : (m <= thresholds[2]) ? 2 : 3;
+            uint8_t compressedY = (y <= thresholds[0]) ? 0 : (y <= thresholds[1]) ? 1 : (y <= thresholds[2]) ? 2 : 3;
+            uint8_t compressedK = (k <= thresholds[0]) ? 0 : (k <= thresholds[1]) ? 1 : (k <= thresholds[2]) ? 2 : 3;
 
-            // Stockage de la valeur compressée
-            out[y * width + x] = compressedValue;
+            // Compression des valeurs dans un seul octet
+            out[y * width + x] = (compressedC << 6) | (compressedM << 4) | (compressedY << 2) | compressedK;
         }
     }
 }

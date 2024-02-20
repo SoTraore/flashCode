@@ -11,10 +11,31 @@
 #define CHANNEL_RGB 3
 #define CHANNEL_CMYK 4
 
-
 void ditheringAlgo(uint8_t* in, int width, int height, int* thresholds, uint8_t* out)
 {
-    //TODO
+    for(int i = 0; i < height; i++)
+    {
+        for(int j = 0; j < width; j++)
+        {
+            // Extraction des valeurs CMYK du pixel
+            uint8_t c = *(in + i * width * CHANNEL_CMYK + (CHANNEL_CMYK * j + 0));
+            uint8_t m = *(in + i * width * CHANNEL_CMYK + (CHANNEL_CMYK * j + 1));
+            uint8_t y = *(in + i * width * CHANNEL_CMYK + (CHANNEL_CMYK * j + 2));
+            uint8_t k = *(in + i * width * CHANNEL_CMYK + (CHANNEL_CMYK * j + 3));
+
+            // On applique le dithering en comparant les valeurs CMYK avec le threshold
+            // On assigne les nouvelles valeurs en fonction du résultat de la comparaison
+            //! Il y a un probleme l'acces au tableau treshold, les indices sont invalides
+            //? Le code fournit donc un résultat différent entre plusieurs execution pour une meme image
+            uint8_t new_c = (c > thresholds[c]) ? 3 : (c > thresholds[c+1]) ? 2 : (c > thresholds[c+2]) ? 1 : 0;
+            uint8_t new_m = (m > thresholds[m]) ? 3 : (m > thresholds[m+1]) ? 2 : (m > thresholds[m+2]) ? 1 : 0;
+            uint8_t new_y = (y > thresholds[y]) ? 3 : (y > thresholds[y+1]) ? 2 : (y > thresholds[y+2]) ? 1 : 0;
+            uint8_t new_k = (k > thresholds[k]) ? 3 : (k > thresholds[k+1]) ? 2 : (k > thresholds[k+2]) ? 1 : 0;
+
+            // On combine les nouvelles valeurs de CMYK dans un seul octet
+            *(out + i * width + j) = (new_c << 6) | (new_m << 4) | (new_y << 2) | new_k;
+        }
+    }
 }
 
 uint8_t lookupTable(uint8_t val)

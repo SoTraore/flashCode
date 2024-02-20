@@ -12,10 +12,31 @@
 #define CHANNEL_CMYK 4
 
 
-void ditheringAlgo(uint8_t* in, int width, int height, int* thresholds, uint8_t* out)
-{
-    //TODO
+void ditheringAlgo(uint8_t* in, int width, int height, int* thresholds, uint8_t* out) {
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            // Index pour accéder aux données CMYK de chaque pixel
+            int idx = (y * width + x) * CHANNEL_CMYK;
+
+            // Extraction des valeurs CMYK du pixel
+            uint8_t c = in[idx];
+            uint8_t m = in[idx + 1];
+            uint8_t y = in[idx + 2];
+            uint8_t k = in[idx + 3];
+
+            // Compression des valeurs CMYK dans un seul octet utilisant les seuils
+            uint8_t compressedValue = 0;
+            compressedValue |= (c > thresholds[0]) ? 0b11000000 : (c > thresholds[1]) ? 0b10000000 : (c > thresholds[2]) ? 0b01000000 : 0;
+            compressedValue |= (m > thresholds[0]) ? 0b00110000 : (m > thresholds[1]) ? 0b00100000 : (m > thresholds[2]) ? 0b00010000 : 0;
+            compressedValue |= (y > thresholds[0]) ? 0b00001100 : (y > thresholds[1]) ? 0b00001000 : (y > thresholds[2]) ? 0b00000100 : 0;
+            compressedValue |= (k > thresholds[0]) ? 0b00000011 : (k > thresholds[1]) ? 0b00000010 : (k > thresholds[2]) ? 0b00000001 : 0;
+
+            // Stockage de la valeur compressée
+            out[y * width + x] = compressedValue;
+        }
+    }
 }
+
 
 uint8_t lookupTable(uint8_t val)
 {
